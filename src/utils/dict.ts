@@ -247,5 +247,11 @@ export enum DICT_TYPE {
   IOT_ALERT_RECEIVE_TYPE = 'iot_alert_receive_type', // IoT 告警接收类型
   IOT_OTA_TASK_DEVICE_SCOPE = 'iot_ota_task_device_scope', // IoT OTA任务设备范围
   IOT_OTA_TASK_STATUS = 'iot_ota_task_status', // IoT OTA 任务状态
-  IOT_OTA_TASK_RECORD_STATUS = 'iot_ota_task_record_status' // IoT OTA 记录状态
+  IOT_OTA_TASK_RECORD_STATUS = 'iot_ota_task_record_status', // IoT OTA 记录状态
+
+  // ========== PRJ - 项目模块  ==========
+  PRJ_SEAL_STATUS = 'prj_seal_status', // Prj 项目封存状态
+  PRJ_ARCHIVE_STATUS = 'prj_archive_status', // Prj  项目归档状态
+  PRJ_STATUS = 'prj_status', // Prj  项目状态
+  PARTICIPATE_STATUS = 'prj_participate_status' // 参与状态
 }
