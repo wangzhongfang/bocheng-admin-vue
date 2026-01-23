@@ -210,9 +210,9 @@
           <dict-tag :type="DICT_TYPE.PRJ_STATUS" :value="scope.row.prjStatus" />
         </template>
       </el-table-column>
-      <el-table-column label="项目分类" align="center" prop="prjCategory">
+      <el-table-column label="项目分类" align="center" prop="prjCategoryId">
         <template #default="scope">
-          <span>{{ scope.row.prjCategory || '--' }}</span>
+          <span>{{ getCategoryName(scope.row.prjCategoryId) || '--' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="项目负责人" align="center" prop="ownerName" width="120px">
@@ -445,4 +445,13 @@ onMounted(async () => {
   getCustomerList()
   getInternalUnitList()
 })
+
+// 获取分类名称的辅助方法
+const getCategoryName = (categoryId: number | string): string => {
+  if (!categoryList.value || !categoryId) {
+    return '--'
+  }
+  const category = categoryList.value.find((item) => item.id === categoryId)
+  return category ? category.categoryName : '--' // 假设分类对象有name字段
+}
 </script>
