@@ -107,9 +107,9 @@
         />
       </el-form-item>
 
-      <el-form-item label="甲方单位" prop="partyAName">
+      <el-form-item label="甲方单位" prop="partyAId">
         <el-select
-          v-model="queryParams.partyAName"
+          v-model="queryParams.partyAId"
           clearable
           filterable
           remote
@@ -126,9 +126,9 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="施工单位" prop="constUnitName">
+      <el-form-item label="施工单位" prop="constUnitId">
         <el-select
-          v-model="queryParams.constUnitName"
+          v-model="queryParams.constUnitId"
           clearable
           filterable
           remote
@@ -230,14 +230,14 @@
           <span>{{ formatToDate(scope.row.completeDate) || '--' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="甲方单位" align="center" prop="partyAName">
+      <el-table-column label="甲方单位" align="center" prop="partyAId">
         <template #default="scope">
-          <span>{{ scope.row.partyAName || '--' }}</span>
+          <span>{{ getPartyAName(scope.row.partyAId) || '--' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="施工单位" align="center" prop="constUnitName">
+      <el-table-column label="施工单位" align="center" prop="constUnitId">
         <template #default="scope">
-          <span>{{ scope.row.constUnitName || '--' }}</span>
+          <span>{{ getContUnitName(scope.row.constUnitId) || '--' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="施工地址" align="center" prop="constAddress">
@@ -314,9 +314,7 @@ const queryParams = reactive({
   startWorkDate: [],
   completeDate: [],
   partyAId: undefined,
-  partyAName: undefined,
   constUnitId: undefined,
-  constUnitName: undefined,
   constAddress: undefined,
   remark: undefined,
   createTime: []
@@ -325,13 +323,8 @@ const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 
 const categoryList = ref<Category[]>([]) // 分类列表
-provide('categoryList', categoryList)
-
 const customerList = ref<Customer[]>([]) // 甲方列表
-provide('customerList', customerList)
-
 const constUnitList = ref<InternalUnit[]>([]) // 施工单位列表
-provide('constUnitList', constUnitList)
 
 /** 查询列表 */
 const getList = async () => {
@@ -409,10 +402,8 @@ const handleExport = async () => {
 }
 
 const getCustomerList = async (customerName: string) => {
-  loading.value = true
   try {
     customerList.value = await CustomerApi.getCustomerList({
-      status: 1,
       customerName: customerName
     })
   } finally {
@@ -420,10 +411,8 @@ const getCustomerList = async (customerName: string) => {
 }
 
 const getCategoryList = async (unitName: string) => {
-  loading.value = true
   try {
     categoryList.value = await CategoryApi.getCategoryList({
-      status: 1,
       unitName: unitName
     })
   } finally {
@@ -431,9 +420,8 @@ const getCategoryList = async (unitName: string) => {
 }
 
 const getInternalUnitList = async () => {
-  loading.value = true
   try {
-    constUnitList.value = await InternalUnitApi.getInternalUnitList({ status: 1 })
+    constUnitList.value = await InternalUnitApi.getInternalUnitList()
   } finally {
   }
 }
@@ -452,6 +440,22 @@ const getCategoryName = (categoryId: number | string): string => {
     return '--'
   }
   const category = categoryList.value.find((item) => item.id === categoryId)
-  return category ? category.categoryName : '--' // 假设分类对象有name字段
+  return category ? category.categoryName : '--'
+}
+
+const getPartyAName = (partyAId: number | string): string => {
+  if (!customerList.value || !partyAId) {
+    return '--'
+  }
+  const customer = customerList.value.find((item) => item.id === partyAId)
+  return customer ? customer.customerName : '--'
+}
+
+const getContUnitName = (constUnitId: number | string): string => {
+  if (!constUnitList.value || !constUnitId) {
+    return '--'
+  }
+  const constUnit = constUnitList.value.find((item) => item.id === constUnitId)
+  return constUnit ? constUnit.unitName : '--'
 }
 </script>

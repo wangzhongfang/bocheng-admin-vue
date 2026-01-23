@@ -10,12 +10,20 @@
       <el-row>
         <el-col :span="12">
           <el-form-item label="项目名称" prop="prjName">
-            <el-input v-model="formData.prjName" placeholder="请输入项目名称" />
+            <el-input
+              v-model="formData.prjName"
+              placeholder="请输入项目名称"
+              :disabled="formType === 'update'"
+            />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="项目编号" prop="prjNo">
-            <el-input v-model="formData.prjNo" placeholder="请输入项目编号" />
+            <el-input
+              v-model="formData.prjNo"
+              placeholder="请输入项目编号"
+              :disabled="formType === 'update'"
+            />
           </el-form-item>
         </el-col>
       </el-row>
@@ -191,6 +199,9 @@
 </template>
 <script setup lang="ts">
 import { InfoApi, Info } from '@/api/prj/info'
+import { CategoryApi, Category } from '@/api/prj/category'
+import { CustomerApi, Customer } from '@/api/prj/customer'
+import { InternalUnitApi, InternalUnit } from '@/api/prj/internalunit'
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import { UserVO } from '@/api/system/user'
 
@@ -227,16 +238,20 @@ const formData = ref({
 })
 const formRules = reactive({
   prjName: [{ required: true, message: '项目名称不能为空', trigger: 'blur' }],
+  prjNo: [{ required: true, message: '项目编号不能为空', trigger: 'blur' }],
   startWorkDate: [{ required: true, message: '开工日期不能为空', trigger: 'blur' }],
   prjStatus: [{ required: true, message: '项目状态不能为空', trigger: 'blur' }],
   ownerId: [{ required: true, message: '项目负责人不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref
-const categoryList = inject('categoryList')
-const customerList = inject('customerList')
-const constUnitList = inject('constUnitList')
+const categoryList = ref<Category[]>([]) // 分类列表
+const customerList = ref<Customer[]>([]) // 甲方列表
+const constUnitList = ref<InternalUnit[]>([]) // 施工单位列表
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
+  getCategoryList()
+  getCustomerList()
+  getInternalUnitList()
   dialogVisible.value = true
   dialogTitle.value = t('action.' + type)
   formType.value = type
@@ -337,6 +352,36 @@ const handleRemoveTag = (removedValue: number | string) => {
   const indexInUsers = selectedManagerUsers.value.findIndex((user) => user.id === removedValue)
   if (indexInUsers !== -1) {
     selectedManagerUsers.value.splice(indexInUsers, 1)
+  }
+}
+
+const getCustomerList = async (customerName: string) => {
+  try {
+    customerList.value = await CustomerApi.getCustomerList({
+      status: 1,
+      customerName: customerName
+    })
+  } finally {
+  }
+}
+
+const getCategoryList = async (categoryName: string) => {
+  try {
+    categoryList.value = await CategoryApi.getCategoryList({
+      status: 1,
+      categoryName: categoryName
+    })
+  } finally {
+  }
+}
+
+const getInternalUnitList = async (unitName: string) => {
+  try {
+    constUnitList.value = await InternalUnitApi.getInternalUnitList({
+      status: 1,
+      unitName: unitName
+    })
+  } finally {
   }
 }
 </script>

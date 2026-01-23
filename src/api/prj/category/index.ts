@@ -48,5 +48,10 @@ export const CategoryApi = {
   // 查询项目分类列表
   getCategoryList: async (params: any) => {
     return await request.get({ url: `/prj/category/list`, params })
+  },
+
+  // 修改项目分类状态
+  changeStatus: async (data: Category) => {
+    return await request.put({ url: `/prj/category/update-status`, data })
   }
 }

@@ -230,7 +230,7 @@ const changeStatus = async (row: Category) => {
     const text = row.status ? '解封' : '封存'
     await message.confirm('确认要"' + text + '"该分类吗?')
     // 发起修改状态
-    await CategoryApi.updateCategory({
+    await CategoryApi.changeStatus({
       id: row.id,
       status: row.status
     })
