@@ -173,6 +173,9 @@
         >
           <Icon icon="ep:delete" class="mr-5px" /> 批量删除
         </el-button>
+        <el-button type="info" plain @click="goCategory">
+          <Icon icon="ep:folder" class="mr-5px" /> 分类管理
+        </el-button>
       </el-form-item>
     </el-form>
   </ContentWrap>
@@ -290,6 +293,7 @@ import { CustomerApi, Customer } from '@/api/prj/customer'
 import { InternalUnitApi, InternalUnit } from '@/api/prj/internalunit'
 import * as UserApi from '@/api/system/user'
 import * as DeptApi from '@/api/system/dept'
+const router = useRouter() // 路由
 import InfoForm from './InfoForm.vue'
 
 /** 项目信息 列表 */
@@ -328,8 +332,13 @@ const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
 
 const categoryList = ref<Category[]>([]) // 分类列表
+provide('categoryList', categoryList)
+
 const customerList = ref<Customer[]>([]) // 甲方列表
+provide('customerList', customerList)
+
 const constUnitList = ref<InternalUnit[]>([]) // 施工单位列表
+provide('constUnitList', constUnitList)
 
 /** 查询列表 */
 const getList = async () => {
@@ -467,5 +476,10 @@ const getContUnitName = (constUnitId: number | string): string => {
   }
   const constUnit = constUnitList.value.find((item) => item.id === constUnitId)
   return constUnit ? constUnit.unitName : '--'
+}
+
+// 跳转到分类管理页面
+const goCategory = () => {
+  router.push('/basic/category')
 }
 </script>

@@ -27,59 +27,24 @@
           </el-form-item>
         </el-col>
       </el-row>
-      <el-row>
-        <el-col :span="12">
-          <el-form-item label="分类" prop="prjCategoryId">
-            <el-select
-              v-model="formData.prjCategoryId"
-              clearable
-              filterable
-              placeholder="请选择分类"
-            >
-              <el-option
-                v-for="item in categoryList"
-                :key="item.id"
-                :label="item.categoryName"
-                :value="item.id"
-              />
-            </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="项目状态" prop="prjStatus">
-            <el-select
-              v-model="formData.prjStatus"
-              clearable
-              placeholder="请选择项目状态"
-              filterable
-            >
-              <el-option
-                v-for="dict in getIntDictOptions(DICT_TYPE.PRJ_STATUS)"
-                :key="dict.value"
-                :label="dict.label"
-                :value="dict.value"
-              />
-            </el-select>
-          </el-form-item>
-        </el-col>
-      </el-row>
 
       <el-row>
         <el-col :span="12">
           <el-form-item label="甲方单位" prop="partyAId">
-            <el-select
-              v-model="formData.partyAId"
-              clearable
-              filterable
+            <el-input
+              v-model="formData.partyAName"
               placeholder="请选择甲方单位"
+              clearable
+              @clear="handleClearPartyA"
+              @click="openCustomerSelectDialog"
+              style="cursor: pointer"
             >
-              <el-option
-                v-for="item in customerList"
-                :key="item.id"
-                :label="item.customerName"
-                :value="item.id"
-              />
-            </el-select>
+              <!-- <template #suffix>
+                <el-icon @click.stop="openCustomerSelectDialog">
+                  <ArrowDown />
+                </el-icon>
+              </template> -->
+            </el-input>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -108,6 +73,44 @@
           </el-form-item>
         </el-col>
       </el-row>
+
+      <el-row>
+        <el-col :span="12">
+          <el-form-item label="分类" prop="prjCategoryId">
+            <el-select
+              v-model="formData.prjCategoryId"
+              clearable
+              filterable
+              placeholder="请选择分类"
+            >
+              <el-option
+                v-for="item in filteredCategoryList"
+                :key="item.id"
+                :label="item.categoryName"
+                :value="item.id"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="项目状态" prop="prjStatus">
+            <el-select
+              v-model="formData.prjStatus"
+              clearable
+              placeholder="请选择项目状态"
+              filterable
+            >
+              <el-option
+                v-for="dict in getIntDictOptions(DICT_TYPE.PRJ_STATUS)"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
+
       <el-row>
         <el-col :span="12">
           <el-form-item label="开工日期" prop="startWorkDate">
@@ -143,7 +146,7 @@
               placeholder="请选择施工单位"
             >
               <el-option
-                v-for="item in constUnitList"
+                v-for="item in filteredUnitList"
                 :key="item.id"
                 :label="item.unitName"
                 :value="item.id"
@@ -220,11 +223,21 @@
     ref="userSelectSingleChoiceFormRef"
     @confirm="handleOwnerSelectConfirm"
   />
+
+  <!-- 客户选择弹窗 -->
+  <CustomerSelectDialog
+    v-model:visible="showCustomerDialog"
+    title="选择甲方单位"
+    :multiple="false"
+    @confirm="handlePartyASelect"
+  />
 </template>
 <script setup lang="ts">
 import { InfoApi, Info } from '@/api/prj/info'
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import { UserVO } from '@/api/system/user'
+import { inject, computed } from 'vue'
+import CustomerSelectDialog from '../prjComponents/customer/CustomerSelectDialog.vue'
 
 const props = defineProps({
   userList: {
@@ -239,9 +252,18 @@ const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
 
 const formRef = ref() // 表单 Ref
-const categoryList = ref<Category[]>([]) // 分类列表
-const customerList = ref<Customer[]>([]) // 甲方列表
-const constUnitList = ref<InternalUnit[]>([]) // 施工单位列表
+const categoryList = inject('categoryList')
+const filteredCategoryList = computed(() => {
+  return categoryList.value.filter((item) => item.status === 1)
+})
+const customerList = inject('customerList')
+const filteredCustomerList = computed(() => {
+  return customerList.value.filter((item) => item.status === 1)
+})
+const constUnitList = inject('constUnitList')
+const filteredUnitList = computed(() => {
+  return constUnitList.value.filter((item) => item.status === 1)
+})
 const userSelectFormRef = ref()
 const userSelectSingleChoiceFormRef = ref()
 const selectedStaffUsers = ref<UserVO[]>([])
@@ -281,6 +303,11 @@ const formRules = reactive({
   ownerId: [{ required: true, message: '项目负责人不能为空', trigger: 'blur' }]
 })
 
+onMounted(() => {
+  // categoryList.value = categoryList.value.filter((item) => item.status === 1)
+  // constUnitList.value = constUnitList.value.filter((item) => item.status === 1)
+  customerList.value = customerList.value.filter((item) => item.status === 1)
+})
 // 初始化选中的用户
 watch(
   () => formData.value,
@@ -410,6 +437,26 @@ const handleRemoveOwnerUser = () => {
 const openOwnerUserSelect = () => {
   currentSelectType.value = 'manager'
   userSelectSingleChoiceFormRef.value.open(0, selectedStaffUsers.value)
+}
+
+const showCustomerDialog = ref(false)
+
+// 打开客户选择弹窗
+const openCustomerSelectDialog = () => {
+  showCustomerDialog.value = true
+}
+
+// 处理客户选择
+const handlePartyASelect = (customer: any) => {
+  formData.value.partyAId = customer.id
+  formData.value.partyAName = customer.customerName
+}
+
+// 清除选择
+const handleClearPartyA = () => {
+  console.log(123)
+  formData.value.partyAId = undefined
+  formData.value.partyAName = ''
 }
 </script>
 <style scoped>
