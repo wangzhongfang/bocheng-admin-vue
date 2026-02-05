@@ -276,7 +276,7 @@
   </ContentWrap>
 
   <!-- 表单弹窗：添加/修改 -->
-  <InfoForm ref="formRef" @success="getList" />
+  <InfoForm ref="formRef" @success="getList" :userList="userList" />
 </template>
 
 <script setup lang="ts">
@@ -288,6 +288,8 @@ import { InfoApi, Info } from '@/api/prj/info'
 import { CategoryApi, Category } from '@/api/prj/category'
 import { CustomerApi, Customer } from '@/api/prj/customer'
 import { InternalUnitApi, InternalUnit } from '@/api/prj/internalunit'
+import * as UserApi from '@/api/system/user'
+import * as DeptApi from '@/api/system/dept'
 import InfoForm from './InfoForm.vue'
 
 /** 项目信息 列表 */
@@ -299,6 +301,9 @@ const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
 const list = ref<Info[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
+
+const userList = ref<UserApi.UserVO[]>([])
+
 const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
@@ -428,12 +433,17 @@ const getInternalUnitList = async () => {
 
 /** 初始化 **/
 onMounted(async () => {
-  getList()
-  getCategoryList()
-  getCustomerList()
-  getInternalUnitList()
+  initData()
 })
 
+const initData = async () => {
+  getList()
+  getCategoryList('')
+  getCustomerList('')
+  getInternalUnitList()
+  // 获取用户列表
+  userList.value = await UserApi.getSimpleUserList()
+}
 // 获取分类名称的辅助方法
 const getCategoryName = (categoryId: number | string): string => {
   if (!categoryList.value || !categoryId) {

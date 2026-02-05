@@ -84,7 +84,27 @@
         </el-col>
         <el-col :span="12">
           <el-form-item label="项目负责人" prop="ownerId">
-            <el-input v-model="formData.ownerId" placeholder="请输入项目负责人" />
+            <div class="flex flex-wrap gap-2">
+              <div
+                v-for="user in selectedOwnerUsers"
+                :key="user.id"
+                class="bg-gray-100 h-35px rounded-3xl flex items-center pr-8px dark:color-gray-600 position-relative"
+              >
+                <el-avatar class="!m-5px" :size="28" v-if="user.avatar" :src="user.avatar" />
+                <el-avatar class="!m-5px" :size="28" v-else>
+                  {{ user.nickname.substring(0, 1) }}
+                </el-avatar>
+                {{ user.nickname }}
+                <Icon
+                  icon="ep:close"
+                  class="ml-2 cursor-pointer hover:text-red-500"
+                  @click="handleRemoveOwnerUser"
+                />
+              </div>
+              <el-button type="primary" link @click="openOwnerUserSelect">
+                <Icon icon="ep:plus" />选择人员
+              </el-button>
+            </div>
           </el-form-item>
         </el-col>
       </el-row>
@@ -163,26 +183,26 @@
         <el-input v-model="formData.remark" placeholder="请输入备注" type="textarea" />
       </el-form-item>
       <el-row>
-        <el-form-item label="项目成员" prop="staffList">
-          <div class="select-with-button">
-            <el-select
-              v-model="formData.staffList"
-              multiple
-              placeholder="请选择"
-              :filterable="true"
-              @remove-tag="handleRemoveTag"
-              class="select-input"
-              value-key="userId"
+        <el-form-item label="项目成员" prop="staffUserIds">
+          <div class="flex flex-wrap gap-2">
+            <div
+              v-for="user in selectedStaffUsers"
+              :key="user.id"
+              class="bg-gray-100 h-35px rounded-3xl flex items-center pr-8px dark:color-gray-600 position-relative"
             >
-              <el-option
-                v-for="item in selectedManagerUsers"
-                :key="item.id"
-                :label="item.nickname"
-                :value="{ userId: item.id, userName: item.nickname }"
+              <el-avatar class="!m-5px" :size="28" v-if="user.avatar" :src="user.avatar" />
+              <el-avatar class="!m-5px" :size="28" v-else>
+                {{ user.nickname.substring(0, 1) }}
+              </el-avatar>
+              {{ user.nickname }}
+              <Icon
+                icon="ep:close"
+                class="ml-2 cursor-pointer hover:text-red-500"
+                @click="handleRemoveManagerUser(user)"
               />
-            </el-select>
-            <el-button type="primary" @click="openManagerUserSelect" class="select-button">
-              <Icon icon="ep:search" /> 选择
+            </div>
+            <el-button type="primary" link @click="openManagerUserSelect">
+              <Icon icon="ep:plus" />选择人员
             </el-button>
           </div>
         </el-form-item>
@@ -194,22 +214,39 @@
     </template>
   </Dialog>
 
-  <!-- 用户选择弹窗 -->
   <UserSelectForm ref="userSelectFormRef" @confirm="handleUserSelectConfirm" />
+
+  <UserSelectSingleChoiceForm
+    ref="userSelectSingleChoiceFormRef"
+    @confirm="handleOwnerSelectConfirm"
+  />
 </template>
 <script setup lang="ts">
 import { InfoApi, Info } from '@/api/prj/info'
-import { CategoryApi, Category } from '@/api/prj/category'
-import { CustomerApi, Customer } from '@/api/prj/customer'
-import { InternalUnitApi, InternalUnit } from '@/api/prj/internalunit'
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import { UserVO } from '@/api/system/user'
 
+const props = defineProps({
+  userList: {
+    type: Array,
+    required: true
+  }
+})
 /** 项目信息 表单 */
 defineOptions({ name: 'InfoForm' })
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
+
+const formRef = ref() // 表单 Ref
+const categoryList = ref<Category[]>([]) // 分类列表
+const customerList = ref<Customer[]>([]) // 甲方列表
+const constUnitList = ref<InternalUnit[]>([]) // 施工单位列表
+const userSelectFormRef = ref()
+const userSelectSingleChoiceFormRef = ref()
+const selectedStaffUsers = ref<UserVO[]>([])
+const selectedOwnerUsers = ref<UserVO[]>([])
+const currentSelectType = ref<'start' | 'manager'>('start')
 
 const dialogVisible = ref(false) // 弹窗的是否展示
 const dialogTitle = ref('') // 弹窗的标题
@@ -234,7 +271,7 @@ const formData = ref({
   constUnitName: undefined,
   constAddress: undefined,
   remark: undefined,
-  staffList: []
+  staffUserIds: []
 })
 const formRules = reactive({
   prjName: [{ required: true, message: '项目名称不能为空', trigger: 'blur' }],
@@ -243,15 +280,32 @@ const formRules = reactive({
   prjStatus: [{ required: true, message: '项目状态不能为空', trigger: 'blur' }],
   ownerId: [{ required: true, message: '项目负责人不能为空', trigger: 'blur' }]
 })
-const formRef = ref() // 表单 Ref
-const categoryList = ref<Category[]>([]) // 分类列表
-const customerList = ref<Customer[]>([]) // 甲方列表
-const constUnitList = ref<InternalUnit[]>([]) // 施工单位列表
+
+// 初始化选中的用户
+watch(
+  () => formData.value,
+  (newVal) => {
+    if (newVal.staffUserIds?.length) {
+      selectedStaffUsers.value = props.userList.filter((user: UserVO) =>
+        newVal.staffUserIds.includes(user.id)
+      ) as UserVO[]
+    } else {
+      selectedStaffUsers.value = []
+    }
+    if (newVal.ownerId) {
+      // 根据 ownerId 查找对应的用户信息
+      const ownerUser = props.userList.find((user: UserVO) => user.id === newVal.ownerId)
+      if (ownerUser) {
+        selectedOwnerUsers.value = [ownerUser] // 将负责人设置为选中状态
+      }
+    }
+  },
+  {
+    immediate: true
+  }
+)
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
-  getCategoryList()
-  getCustomerList()
-  getInternalUnitList()
   dialogVisible.value = true
   dialogTitle.value = t('action.' + type)
   formType.value = type
@@ -261,7 +315,6 @@ const open = async (type: string, id?: number) => {
     formLoading.value = true
     try {
       formData.value = await InfoApi.getInfo(id)
-      selectedManagerUsers.value = formData.value.staffList
     } finally {
       formLoading.value = false
     }
@@ -315,74 +368,48 @@ const resetForm = () => {
     constAddress: undefined,
     remark: undefined
   }
-  selectedManagerUsers.value = []
+  selectedStaffUsers.value = []
+  selectedOwnerUsers.value = []
   formRef.value?.resetFields()
 }
-
-const userSelectFormRef = ref()
-const selectedManagerUsers = ref<UserVO[]>([])
-const currentSelectType = ref<'start' | 'manager'>('start')
-// 存储从弹窗返回的用户对象数组
-const selectedUsers = ref<UserVO[]>([])
 
 /** 打开管理员选择 */
 const openManagerUserSelect = () => {
   currentSelectType.value = 'manager'
-  userSelectFormRef.value.open(0, selectedManagerUsers.value)
+  userSelectFormRef.value.open(0, selectedStaffUsers.value)
 }
 
 /** 处理用户选择确认 */
 const handleUserSelectConfirm = (_, users: UserVO[]) => {
-  // 1. 保存用户对象数组（用于显示）
-  selectedUsers.value = users
-
-  // 2. 将用户对象数组映射为需要的格式赋值给表单数据
-  formData.value.staffList = users.map((user) => ({
-    userId: user.id,
-    userName: user.nickname // 这里使用 nickname，如果姓名在其他字段，请相应修改
-  }))
-
-  // 3. 如果需要在其他地方使用，可以再赋给 selectedManagerUsers
-  selectedManagerUsers.value = users
-}
-
-/** 处理移除标签事件 */
-const handleRemoveTag = (removedValue: number | string) => {
-  // 从 selectedManagerUsers 中移除对应的用户对象
-  const indexInUsers = selectedManagerUsers.value.findIndex((user) => user.id === removedValue)
-  if (indexInUsers !== -1) {
-    selectedManagerUsers.value.splice(indexInUsers, 1)
+  formData.value = {
+    ...formData.value,
+    staffUserIds: users.map((u) => u.id)
   }
 }
 
-const getCustomerList = async (customerName: string) => {
-  try {
-    customerList.value = await CustomerApi.getCustomerList({
-      status: 1,
-      customerName: customerName
-    })
-  } finally {
+/** 移除管理员 */
+const handleRemoveManagerUser = (user: UserVO) => {
+  formData.value = {
+    ...formData.value,
+    staffUserIds: formData.value.staffUserIds.filter((id: number) => id !== user.id)
   }
 }
 
-const getCategoryList = async (categoryName: string) => {
-  try {
-    categoryList.value = await CategoryApi.getCategoryList({
-      status: 1,
-      categoryName: categoryName
-    })
-  } finally {
-  }
+const handleOwnerSelectConfirm = (_, users: UserVO[]) => {
+  console.log(users, 'users')
+  formData.value.ownerId = users.id
+  formData.value.ownerName = users.nickname
+  selectedOwnerUsers.value = [users]
 }
-
-const getInternalUnitList = async (unitName: string) => {
-  try {
-    constUnitList.value = await InternalUnitApi.getInternalUnitList({
-      status: 1,
-      unitName: unitName
-    })
-  } finally {
-  }
+const handleRemoveOwnerUser = () => {
+  selectedOwnerUsers.value = []
+  formData.value.ownerId = null
+  formData.value.ownerName = null
+}
+/** 打开管理员选择 */
+const openOwnerUserSelect = () => {
+  currentSelectType.value = 'manager'
+  userSelectSingleChoiceFormRef.value.open(0, selectedStaffUsers.value)
 }
 </script>
 <style scoped>
