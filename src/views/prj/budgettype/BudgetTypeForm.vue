@@ -7,24 +7,22 @@
       label-width="100px"
       v-loading="formLoading"
     >
-      <el-form-item label="类别名称" prop="categoryName">
-        <el-input v-model="formData.categoryName" placeholder="请输入类别名称" maxlength="50" />
+      <el-form-item label="预算名称" prop="budgetName">
+        <el-input v-model="formData.budgetName" placeholder="请输入预算名称" />
       </el-form-item>
-      <el-form-item label="状态" prop="status">
-        <el-select
-          v-model="formData.status"
-          class="!w-240px"
-          clearable
-          placeholder="请选择封存状态"
-          filterable
-        >
-          <el-option
-            v-for="dict in getIntDictOptions(DICT_TYPE.PRJ_SEAL_STATUS)"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
+      <el-form-item label="预算等级" prop="budgetLevel">
+        <el-input v-model="formData.budgetLevel" placeholder="请输入预算等级" />
+      </el-form-item>
+      <el-form-item label="预算编码" prop="budgetCode">
+        <el-input v-model="formData.budgetCode" placeholder="请输入预算编码" />
+      </el-form-item>
+      <el-form-item label="状态 0.已封存 1.未封存" prop="status">
+        <el-radio-group v-model="formData.status">
+          <el-radio value="1">请选择字典生成</el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item label="备注" prop="remark">
+        <el-input v-model="formData.remark" placeholder="请输入备注" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -34,10 +32,10 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-import { CategoryApi, Category } from '@/api/prj/category'
-import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
-/** 项目分类 表单 */
-defineOptions({ name: 'CategoryForm' })
+import { BudgetTypeApi, BudgetType } from '@/api/prj/budgettype'
+
+/** 项目-预算类型 表单 */
+defineOptions({ name: 'BudgetTypeForm' })
 
 const { t } = useI18n() // 国际化
 const message = useMessage() // 消息弹窗
@@ -48,11 +46,13 @@ const formLoading = ref(false) // 表单的加载中：1）修改时的数据加
 const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
-  categoryName: undefined,
-  status: 1
+  budgetName: undefined,
+  budgetLevel: undefined,
+  budgetCode: undefined,
+  status: undefined,
+  remark: undefined,
 })
 const formRules = reactive({
-  categoryName: [{ required: true, message: '类别名称不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref
 
@@ -66,7 +66,7 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await CategoryApi.getCategory(id)
+      formData.value = await BudgetTypeApi.getBudgetType(id)
     } finally {
       formLoading.value = false
     }
@@ -82,12 +82,12 @@ const submitForm = async () => {
   // 提交请求
   formLoading.value = true
   try {
-    const data = formData.value as unknown as Category
+    const data = formData.value as unknown as BudgetType
     if (formType.value === 'create') {
-      await CategoryApi.createCategory(data)
+      await BudgetTypeApi.createBudgetType(data)
       message.success(t('common.createSuccess'))
     } else {
-      await CategoryApi.updateCategory(data)
+      await BudgetTypeApi.updateBudgetType(data)
       message.success(t('common.updateSuccess'))
     }
     dialogVisible.value = false
@@ -102,8 +102,11 @@ const submitForm = async () => {
 const resetForm = () => {
   formData.value = {
     id: undefined,
-    categoryName: undefined,
-    status: 1
+    budgetName: undefined,
+    budgetLevel: undefined,
+    budgetCode: undefined,
+    status: undefined,
+    remark: undefined,
   }
   formRef.value?.resetFields()
 }

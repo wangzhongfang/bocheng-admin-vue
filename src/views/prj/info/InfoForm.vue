@@ -14,6 +14,7 @@
               v-model="formData.prjName"
               placeholder="请输入项目名称"
               :disabled="formType === 'update'"
+              maxlength="50"
             />
           </el-form-item>
         </el-col>
@@ -23,6 +24,7 @@
               v-model="formData.prjNo"
               placeholder="请输入项目编号"
               :disabled="formType === 'update'"
+              maxlength="50"
             />
           </el-form-item>
         </el-col>
@@ -38,13 +40,7 @@
               @clear="handleClearPartyA"
               @click="openCustomerSelectDialog"
               style="cursor: pointer"
-            >
-              <!-- <template #suffix>
-                <el-icon @click.stop="openCustomerSelectDialog">
-                  <ArrowDown />
-                </el-icon>
-              </template> -->
-            </el-input>
+            />
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -139,24 +135,23 @@
       <el-row>
         <el-col :span="12">
           <el-form-item label="施工单位" prop="constUnitId">
-            <el-select
-              v-model="formData.constUnitId"
+            <el-input
+              v-model="formData.constUnitName"
+              placeholder="请选择甲方单位"
               clearable
-              filterable
-              placeholder="请选择施工单位"
-            >
-              <el-option
-                v-for="item in filteredUnitList"
-                :key="item.id"
-                :label="item.unitName"
-                :value="item.id"
-              />
-            </el-select>
+              @clear="handleClearInternalUnit"
+              @click="openInternalUnitSelectDialog"
+              style="cursor: pointer"
+            />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="施工地址" prop="constAddress">
-            <el-input v-model="formData.constAddress" placeholder="请输入施工地址" />
+            <el-input
+              v-model="formData.constAddress"
+              placeholder="请输入施工地址"
+              maxlength="150"
+            />
           </el-form-item>
         </el-col>
       </el-row>
@@ -180,10 +175,20 @@
         </el-col>
       </el-row>
       <el-form-item label="项目概况" prop="prjOverview">
-        <el-input v-model="formData.prjOverview" placeholder="请输入项目概况" type="textarea" />
+        <el-input
+          v-model="formData.prjOverview"
+          placeholder="请输入项目概况"
+          type="textarea"
+          maxlength="250"
+        />
       </el-form-item>
       <el-form-item label="备注" prop="remark">
-        <el-input v-model="formData.remark" placeholder="请输入备注" type="textarea" />
+        <el-input
+          v-model="formData.remark"
+          placeholder="请输入备注"
+          type="textarea"
+          maxlength="250"
+        />
       </el-form-item>
       <el-row>
         <el-form-item label="项目成员" prop="staffUserIds">
@@ -231,6 +236,14 @@
     :multiple="false"
     @confirm="handlePartyASelect"
   />
+
+  <!-- 内部单位选择弹窗 -->
+  <InternalUnitSelectDialog
+    v-model:visible="showInternalUnitDialog"
+    title="选择内部单位"
+    :multiple="false"
+    @confirm="handleInternalUnitSelect"
+  />
 </template>
 <script setup lang="ts">
 import { InfoApi, Info } from '@/api/prj/info'
@@ -238,6 +251,7 @@ import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 import { UserVO } from '@/api/system/user'
 import { inject, computed } from 'vue'
 import CustomerSelectDialog from '../prjComponents/customer/CustomerSelectDialog.vue'
+import InternalUnitSelectDialog from '../prjComponents/internalunit/InternalUnitSelectDialog.vue'
 
 const props = defineProps({
   userList: {
@@ -440,7 +454,6 @@ const openOwnerUserSelect = () => {
 }
 
 const showCustomerDialog = ref(false)
-
 // 打开客户选择弹窗
 const openCustomerSelectDialog = () => {
   showCustomerDialog.value = true
@@ -452,11 +465,28 @@ const handlePartyASelect = (customer: any) => {
   formData.value.partyAName = customer.customerName
 }
 
-// 清除选择
+// 清除客户选择
 const handleClearPartyA = () => {
-  console.log(123)
   formData.value.partyAId = undefined
   formData.value.partyAName = ''
+}
+
+const showInternalUnitDialog = ref(false)
+// 打开内部单位选择弹窗
+const openInternalUnitSelectDialog = () => {
+  showInternalUnitDialog.value = true
+}
+
+// 处理内部单位选择
+const handleInternalUnitSelect = (internalUnit: any) => {
+  formData.value.constUnitId = internalUnit.id
+  formData.value.constUnitName = internalUnit.unitName
+}
+
+// 清除内部单位选择
+const handleClearInternalUnit = () => {
+  formData.value.constUnitId = undefined
+  formData.value.constUnitName = ''
 }
 </script>
 <style scoped>

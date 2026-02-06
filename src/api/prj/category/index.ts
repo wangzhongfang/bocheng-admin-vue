@@ -53,5 +53,10 @@ export const CategoryApi = {
   // 修改项目分类状态
   changeStatus: async (data: Category) => {
     return await request.put({ url: `/prj/category/update-status`, data })
+  },
+
+  // 查询项目分类材料数量
+  getCategoryListWithMaterialCount: async (params: any) => {
+    return await request.get({ url: `/prj/category/list-with-material-count`, params })
   }
 }

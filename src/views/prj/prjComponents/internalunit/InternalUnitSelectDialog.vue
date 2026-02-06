@@ -15,35 +15,19 @@
         :inline="true"
         label-width="85px"
       >
-        <el-form-item label="客户名称" prop="customerName">
+        <el-form-item label="单位名称" prop="unitName">
           <el-input
-            v-model="queryParams.customerName"
-            placeholder="请输入客户名称"
+            v-model="queryParams.unitName"
+            placeholder="请输入单位名称"
             clearable
             @keyup.enter="handleQuery"
             class="!w-240px"
           />
         </el-form-item>
-        <el-form-item label="分类" prop="prjCategoryId">
-          <el-select
-            v-model="queryParams.prjCategoryId"
-            clearable
-            filterable
-            placeholder="请选择分类"
-            class="!w-240px"
-          >
-            <el-option
-              v-for="item in categoryList"
-              :key="item.id"
-              :label="item.categoryName"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="联系人" prop="contactName">
+        <el-form-item label="联系人姓名" prop="contactName">
           <el-input
             v-model="queryParams.contactName"
-            placeholder="请输入联系人"
+            placeholder="请输入联系人姓名"
             clearable
             @keyup.enter="handleQuery"
             class="!w-240px"
@@ -81,7 +65,7 @@
             type="primary"
             plain
             @click="openForm('create')"
-            v-hasPermi="['prj:customer:create']"
+            v-hasPermi="['prj:internal-unit:create']"
           >
             <Icon icon="ep:plus" class="mr-5px" /> 新增
           </el-button>
@@ -100,7 +84,6 @@
         @selection-change="handleRowCheckboxChange"
         @row-click="handleRowClick"
       >
-        <!-- 根据选择模式显示不同的列 -->
         <el-table-column v-if="props.multiple" type="selection" width="55" />
         <el-table-column v-else label="选择" width="55">
           <template #default="scope">
@@ -110,14 +93,9 @@
             </el-radio>
           </template>
         </el-table-column>
-
-        <el-table-column label="客户名称" align="center" prop="customerName" />
-        <el-table-column label="分类" align="center" prop="prjCategoryName">
-          <template #default="scope">
-            {{ scope.row.prjCategoryName || '--' }}
-          </template>
-        </el-table-column>
-        <el-table-column label="联系人" align="center" prop="contactName">
+        <el-table-column type="selection" width="55" />
+        <el-table-column label="单位名称" align="center" prop="unitName" />
+        <el-table-column label="联系人姓名" align="center" prop="contactName">
           <template #default="scope">
             {{ scope.row.contactName || '--' }}
           </template>
@@ -125,6 +103,11 @@
         <el-table-column label="联系人电话" align="center" prop="contactPhone">
           <template #default="scope">
             {{ scope.row.contactPhone || '--' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="办公地点" align="center" prop="officeLocation">
+          <template #default="scope">
+            {{ scope.row.officeLocation || '--' }}
           </template>
         </el-table-column>
         <el-table-column label="状态" align="center" prop="status">
@@ -153,16 +136,15 @@
     </template>
 
     <!-- 表单弹窗：添加/修改 -->
-    <CustomerForm ref="formRef" @success="getList" />
+    <InternalUnitForm ref="formRef" @success="getList" />
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, watch } from 'vue'
+import { isEmpty } from '@/utils/is'
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
-import { CustomerApi, Customer } from '@/api/prj/customer'
-import { CategoryApi, Category } from '@/api/prj/category'
-import CustomerForm from './CustomerForm.vue'
+import { InternalUnitApi, InternalUnit } from '@/api/prj/internalunit'
+import InternalUnitForm from './InternalUnitForm.vue'
 
 interface Props {
   visible: boolean
@@ -174,14 +156,14 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   visible: false,
-  title: '选择客户',
+  title: '选择内部单位',
   multiple: false,
   selectedIds: () => [],
   selectedId: undefined
 })
 const emit = defineEmits<{
   'update:visible': [value: boolean]
-  confirm: [data: Customer | Customer[]]
+  confirm: [data: InternalUnit | InternalUnit[]]
   close: []
 }>()
 
@@ -193,7 +175,7 @@ const dialogVisible = computed({
 const message = useMessage() // 消息弹窗
 const { t } = useI18n() // 国际化
 const loading = ref(true) // 列表的加载中
-const list = ref<Customer[]>([]) // 列表的数据
+const list = ref<InternalUnit[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
@@ -206,8 +188,6 @@ const queryParams = reactive({
 })
 const queryFormRef = ref() // 搜索的表单
 const exportLoading = ref(false) // 导出的加载中
-
-const categoryList = ref<Category[]>([]) // 分类列表
 
 // 使用不同的变量名避免冲突
 const internalSelectedId = ref<number>()
@@ -224,7 +204,6 @@ watch(
         internalSelectedId.value = props.selectedId
       }
       getList()
-      getCategoryList()
     }
   }
 )
@@ -251,20 +230,11 @@ const getSelectedData = () => {
 const getList = async () => {
   loading.value = true
   try {
-    const data = await CustomerApi.getCustomerPage(queryParams)
+    const data = await InternalUnitApi.getInternalUnitPage(queryParams)
     list.value = data.list
     total.value = data.total
   } finally {
     loading.value = false
-  }
-}
-
-/** 查询分类列表 */
-const getCategoryList = async () => {
-  try {
-    categoryList.value = await CategoryApi.getCategoryList({ status: 1 })
-  } catch (error) {
-    console.error('获取分类列表失败:', error)
   }
 }
 
@@ -287,12 +257,12 @@ const openForm = (type: string, id?: number) => {
 }
 
 /** 行选择变化（多选模式） */
-const handleRowCheckboxChange = (records: Customer[]) => {
+const handleRowCheckboxChange = (records: InternalUnit[]) => {
   checkedIds.value = records.map((item) => item.id!)
 }
 
 // 行点击事件（单选模式）
-const handleRowClick = (row: Customer) => {
+const handleRowClick = (row: InternalUnit) => {
   if (!props.multiple) {
     internalSelectedId.value = row.id
   }

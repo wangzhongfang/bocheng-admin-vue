@@ -10,7 +10,7 @@
       <el-row>
         <el-col :span="12">
           <el-form-item label="客户名称" prop="customerName">
-            <el-input v-model="formData.customerName" placeholder="请输入客户名称" />
+            <el-input v-model="formData.customerName" placeholder="请输入客户名称" maxlength="50" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -35,55 +35,71 @@
       <el-row>
         <el-col :span="12">
           <el-form-item label="联系人姓名" prop="contactName">
-            <el-input v-model="formData.contactName" placeholder="请输入联系人姓名" />
+            <el-input
+              v-model="formData.contactName"
+              placeholder="请输入联系人姓名"
+              maxlength="50"
+            />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="联系人电话" prop="contactPhone">
-            <el-input v-model="formData.contactPhone" placeholder="请输入联系人电话" />
+            <el-input
+              v-model="formData.contactPhone"
+              placeholder="请输入联系人电话"
+              maxlength="50"
+            />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="12">
           <el-form-item label="办公地点" prop="officeLocation">
-            <el-input v-model="formData.officeLocation" placeholder="请输入办公地点" />
+            <el-input
+              v-model="formData.officeLocation"
+              placeholder="请输入办公地点"
+              maxlength="150"
+            />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="发票抬头" prop="invoiceTitle">
-            <el-input v-model="formData.invoiceTitle" placeholder="请输入发票抬头" />
+            <el-input
+              v-model="formData.invoiceTitle"
+              placeholder="请输入发票抬头"
+              maxlength="150"
+            />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="12">
           <el-form-item label="税号" prop="taxNo">
-            <el-input v-model="formData.taxNo" placeholder="请输入税号" />
+            <el-input v-model="formData.taxNo" placeholder="请输入税号" maxlength="50" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="地址" prop="address">
-            <el-input v-model="formData.address" placeholder="请输入地址" />
+            <el-input v-model="formData.address" placeholder="请输入地址" maxlength="150" />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="12">
           <el-form-item label="电话" prop="phone">
-            <el-input v-model="formData.phone" placeholder="请输入电话" />
+            <el-input v-model="formData.phone" placeholder="请输入电话" maxlength="50" />
           </el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="开户行" prop="bankName">
-            <el-input v-model="formData.bankName" placeholder="请输入开户行" />
+            <el-input v-model="formData.bankName" placeholder="请输入开户行" maxlength="50" />
           </el-form-item>
         </el-col>
       </el-row>
       <el-row>
         <el-col :span="12">
           <el-form-item label="银行卡号" prop="bankCard">
-            <el-input v-model="formData.bankCard" placeholder="请输入银行卡号" />
+            <el-input v-model="formData.bankCard" placeholder="请输入银行卡号" maxlength="50" />
           </el-form-item>
         </el-col>
 
@@ -108,7 +124,12 @@
       </el-row>
 
       <el-form-item label="备注" prop="remark">
-        <el-input v-model="formData.remark" placeholder="请输入备注" type="textarea" />
+        <el-input
+          v-model="formData.remark"
+          placeholder="请输入备注"
+          type="textarea"
+          maxlength="250"
+        />
       </el-form-item>
     </el-form>
     <template #footer>

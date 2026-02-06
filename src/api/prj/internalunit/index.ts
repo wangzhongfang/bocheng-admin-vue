@@ -1,5 +1,4 @@
 import request from '@/config/axios'
-import type { Dayjs } from 'dayjs'
 
 /** 内部单位信息 */
 export interface InternalUnit {
