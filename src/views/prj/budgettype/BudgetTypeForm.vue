@@ -4,22 +4,50 @@
       ref="formRef"
       :model="formData"
       :rules="formRules"
-      label-width="100px"
+      label-width="150px"
       v-loading="formLoading"
     >
-      <el-form-item label="预算名称" prop="budgetName">
-        <el-input v-model="formData.budgetName" placeholder="请输入预算名称" />
+      <el-form-item label="二级预算类型" prop="budgetName">
+        <el-input v-model="formData.budgetName" placeholder="请输入二级预算类型" maxlength="50" />
       </el-form-item>
-      <el-form-item label="预算等级" prop="budgetLevel">
-        <el-input v-model="formData.budgetLevel" placeholder="请输入预算等级" />
+      <el-form-item label="二级预算类型编码" prop="budgetCode">
+        <el-input
+          v-model="formData.budgetCode"
+          placeholder="请输入二级预算类型编码"
+          maxlength="50"
+        />
       </el-form-item>
-      <el-form-item label="预算编码" prop="budgetCode">
-        <el-input v-model="formData.budgetCode" placeholder="请输入预算编码" />
+      <el-form-item label="预算类型" prop="parentId">
+        <el-select
+          v-model="formData.parentId"
+          clearable
+          filterable
+          placeholder="请选择分类"
+          class="!w-240px"
+        >
+          <el-option
+            v-for="item in budgetTypeList"
+            :key="item.id"
+            :label="item.budgetName"
+            :value="item.id"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item label="状态 0.已封存 1.未封存" prop="status">
-        <el-radio-group v-model="formData.status">
-          <el-radio value="1">请选择字典生成</el-radio>
-        </el-radio-group>
+      <el-form-item label="状态" prop="status">
+        <el-select
+          v-model="formData.status"
+          class="!w-240px"
+          clearable
+          placeholder="请选择封存状态"
+          filterable
+        >
+          <el-option
+            v-for="dict in getIntDictOptions(DICT_TYPE.PRJ_SEAL_STATUS)"
+            :key="dict.value"
+            :label="dict.label"
+            :value="dict.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item label="备注" prop="remark">
         <el-input v-model="formData.remark" placeholder="请输入备注" />
@@ -33,6 +61,7 @@
 </template>
 <script setup lang="ts">
 import { BudgetTypeApi, BudgetType } from '@/api/prj/budgettype'
+import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
 
 /** 项目-预算类型 表单 */
 defineOptions({ name: 'BudgetTypeForm' })
@@ -47,14 +76,18 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const formData = ref({
   id: undefined,
   budgetName: undefined,
-  budgetLevel: undefined,
+  budgetLevel: 2,
   budgetCode: undefined,
-  status: undefined,
-  remark: undefined,
+  parentId: undefined,
+  status: 1,
+  remark: undefined
 })
 const formRules = reactive({
+  budgetName: [{ required: true, message: '二级预算类型不能为空', trigger: 'blur' }],
+  parentId: [{ required: true, message: '预算类型不能为空', trigger: 'blur' }]
 })
 const formRef = ref() // 表单 Ref
+const budgetTypeList = inject('budgetTypeList')
 
 /** 打开弹窗 */
 const open = async (type: string, id?: number) => {
@@ -103,10 +136,10 @@ const resetForm = () => {
   formData.value = {
     id: undefined,
     budgetName: undefined,
-    budgetLevel: undefined,
+    budgetLevel: 2,
     budgetCode: undefined,
-    status: undefined,
-    remark: undefined,
+    status: 1,
+    remark: undefined
   }
   formRef.value?.resetFields()
 }

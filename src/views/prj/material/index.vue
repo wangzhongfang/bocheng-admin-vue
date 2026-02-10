@@ -1,6 +1,6 @@
 <template>
   <el-row :gutter="20">
-    <!-- 左侧部门树 -->
+    <!-- 左侧分类树 -->
     <el-col :span="4" :xs="24">
       <ContentWrap class="h-1/1">
         <CategoryTree @node-click="handleCategoryNodeClick" />
@@ -105,7 +105,7 @@
               <span>{{ scope.row.brand || '--' }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="分类id" align="center" prop="categoryId">
+          <el-table-column label="分类名称" align="center" prop="categoryId">
             <template #default="scope">
               <span>{{ getCategoryName(scope.row.categoryId) || '--' }}</span>
             </template>
@@ -231,7 +231,6 @@ const resetQuery = () => {
 
 /** 处理部门被点击 */
 const handleCategoryNodeClick = async (row: any) => {
-  console.log('点击分类:', row)
   if (row === undefined) {
     queryParams.categoryId = undefined
     await getList()
@@ -252,7 +251,7 @@ const changeStatus = async (row: Material) => {
   try {
     // 修改状态的二次确认
     const text = row.status ? '解封' : '封存'
-    await message.confirm('确认要"' + text + '"该单位吗?')
+    await message.confirm('确认要"' + text + '"该材料吗?')
     // 发起修改状态
     await MaterialApi.updateMaterial({
       id: row.id,
@@ -274,7 +273,7 @@ const handleExport = async () => {
     // 发起导出
     exportLoading.value = true
     const data = await MaterialApi.exportMaterial(queryParams)
-    download.excel(data, '用户数据.xls')
+    download.excel(data, '材料数据.xls')
   } catch {
   } finally {
     exportLoading.value = false

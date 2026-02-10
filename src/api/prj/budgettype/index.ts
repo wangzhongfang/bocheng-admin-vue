@@ -1,15 +1,16 @@
 import request from '@/config/axios'
-import type { Dayjs } from 'dayjs';
+import type { Dayjs } from 'dayjs'
 
 /** 项目-预算类型信息 */
 export interface BudgetType {
-          id: number; // 主键id
-          budgetName: string; // 预算名称
-          budgetLevel: number; // 预算等级
-          budgetCode: string; // 预算编码
-          status: number; // 状态 0.已封存 1.未封存
-          remark: string; // 备注
-  }
+  id: number // 主键id
+  budgetName: string // 预算名称
+  budgetLevel: number // 预算等级
+  budgetCode: string // 预算编码
+  status: number // 状态 0.已封存 1.未封存
+  remark: string // 备注
+  parentId: number // 父级id
+}
 
 // 项目-预算类型 API
 export const BudgetTypeApi = {
@@ -47,4 +48,14 @@ export const BudgetTypeApi = {
   exportBudgetType: async (params) => {
     return await request.download({ url: `/prj/budget-type/export-excel`, params })
   },
-}
+
+  // 查询项目-预算类型分页
+  getBudgetLevelTreeList: async (params: any) => {
+    return await request.get({ url: `/prj/budget-type/get-budget-level-tree-list`, params })
+  },
+
+  // 查询项目-预算类型分页
+  getBudgetTypeListAll: async (params: any) => {
+    return await request.get({ url: `/prj/budget-type/list-all`, params })
+  }
+}
