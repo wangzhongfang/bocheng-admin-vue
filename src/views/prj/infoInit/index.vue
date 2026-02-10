@@ -265,6 +265,7 @@ import { InfoApi, Info } from '@/api/prj/info'
 import { CategoryApi, Category } from '@/api/prj/category'
 import { CustomerApi, Customer } from '@/api/prj/customer'
 import { InternalUnitApi, InternalUnit } from '@/api/prj/internalunit'
+import { BudgetTypeApi, BudgetType } from '@/api/prj/budgettype'
 import * as UserApi from '@/api/system/user'
 const router = useRouter() // 路由
 import FoundsForm from './foundsForm.vue'
@@ -418,7 +419,6 @@ const getInternalUnitList = async () => {
   } finally {
   }
 }
-
 /** 初始化 **/
 onMounted(async () => {
   initData()
@@ -432,6 +432,7 @@ const initData = async () => {
   // 获取用户列表
   userList.value = await UserApi.getSimpleUserList()
 }
+
 // 获取分类名称的辅助方法
 const getCategoryName = (categoryId: number | string): string => {
   if (!categoryList.value || !categoryId) {

@@ -4,7 +4,7 @@
       ref="formRef"
       :model="formData"
       :rules="formRules"
-      label-width="100px"
+      label-width="150px"
       v-loading="formLoading"
     >
       <el-row>
@@ -75,8 +75,6 @@
               <el-input
                 v-model="scope.row.materialName"
                 placeholder="请选择材料名称"
-                clearable
-                @clear="handleClearMaterial"
                 @click="openMaterialSelectDialog"
                 style="cursor: pointer"
               />
@@ -91,7 +89,24 @@
           <el-table-column label="总额" align="center" prop="amount" />
           <el-table-column label="备注" align="center" prop="remark" />
           <el-table-column label="其他属性" align="center" prop="otherProperties" />
-          <el-table-column label="预算名称" align="center" prop="budgetName" />
+          <el-table-column label="预算名称" align="center" prop="budgetId">
+            <template #default="scope">
+              <el-select
+                v-model="scope.row.budgetId"
+                clearable
+                filterable
+                placeholder="请选择预算名称"
+                value-key="id"
+              >
+                <el-option
+                  v-for="item in budgetTypeList"
+                  :key="item.id"
+                  :label="item.budgetName"
+                  :value="item.id"
+                />
+              </el-select>
+            </template>
+          </el-table-column>
           <el-table-column label="操作" align="center" min-width="120px">
             <template #default="scope">
               <el-button
@@ -120,13 +135,21 @@
     </template>
   </Dialog>
 
-  <!-- 添加库存材料表单弹窗：添加/修改 -->
-  <!-- <InventoryAddForm ref="formInventoryRef" @success="getList" /> -->
+  <!-- 添加材料表单弹窗：添加/修改 -->
+  <MaterialSelectDialog
+    @success="getList"
+    v-model:visible="showMaterialDialog"
+    :multiple="true"
+    title="选择材料"
+    @confirm="handleMaterialSelect"
+    :selected-ids="selectedIds"
+  />
 </template>
 <script setup lang="ts">
 import { InfoApi, Info } from '@/api/prj/info'
 import { InventoryApi, Inventory } from '@/api/prj/inventory'
-import InventoryAddForm from './inventoryAddForm.vue'
+import { BudgetTypeApi, BudgetType } from '@/api/prj/budgettype'
+import MaterialSelectDialog from '../prjComponents/material/materialSelectDialog.vue'
 
 /** 项目信息 表单 */
 defineOptions({ name: 'InfoForm' })
@@ -143,13 +166,22 @@ const formType = ref('') // 表单的类型：create - 新增；update - 修改
 const queryFormRef = ref() // 搜索的表单
 const formData = ref({
   id: undefined,
-  prjName: undefined,
-  prjNo: undefined,
-  fundsDirection: 1,
-  fundsAmount: undefined,
-  inventoryAmount: undefined
+  materialName: '',
+  spec: '',
+  brand: '',
+  meterialName: '',
+  quantity: '',
+  unit: '',
+  price: '',
+  amount: '',
+  remark: '',
+  otherProperties: '',
+  budgetName: '',
+  budgetId: 1
 })
 const inventoryList = ref([])
+const selectedIds = []
+
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
@@ -182,6 +214,7 @@ const open = async (type: string, id?: number) => {
       formLoading.value = false
     }
   }
+  getBudgetTypeListAll()
 }
 defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 
@@ -235,25 +268,26 @@ const getList = async () => {
 
 /** 删除按钮操作 */
 const handleDelete = async (id: number) => {
-  try {
-    // 删除的二次确认
-    await message.delConfirm()
-    // 发起删除
-    await InventoryApi.deleteInventory(id)
-    message.success(t('common.delSuccess'))
-    // 刷新列表
-    await getList()
-  } catch {}
+  // 从 inventoryList 中过滤掉要删除的数据
+  inventoryList.value = inventoryList.value.filter((item) => item.id !== id)
+  message.success(t('common.delSuccess')) // 显示删除成功提示
 }
 /** 重置表单 */
 const resetForm = () => {
   formData.value = {
     id: undefined,
-    prjName: undefined,
-    prjNo: undefined,
-    fundsDirection: 1,
-    fundsAmount: undefined,
-    inventoryAmount: undefined
+    materialName: '',
+    spec: '',
+    brand: '',
+    meterialName: '',
+    quantity: '',
+    unit: '',
+    price: '',
+    amount: '',
+    remark: '',
+    otherProperties: '',
+    budgetName: '',
+    budgetId: 1
   }
   inventoryList.value = []
   formRef.value?.resetFields()
@@ -261,8 +295,6 @@ const resetForm = () => {
 
 /** 新增按钮操作 */
 const handleAdd = () => {
-  console.log(123)
-
   // 创建一条新的空数据对象
   const newRow = {
     id: '', // 使用时间戳作为唯一标识
@@ -276,28 +308,37 @@ const handleAdd = () => {
     amount: '',
     remark: '',
     otherProperties: '',
-    budgetName: ''
+    budgetName: '',
+    budgetId: 1
   }
   // 插入到 inventoryList 数组开头
   inventoryList.value.unshift(newRow)
 }
 
-const showInternalUnitDialog = ref(false)
+const showMaterialDialog = ref(false)
 // 打开材料选择弹窗
 const openMaterialSelectDialog = () => {
-  showInternalUnitDialog.value = true
+  selectedIds.value = inventoryList.value.map((item) => item.materialId)
+  showMaterialDialog.value = true
 }
 
 // 处理材料单位选择
-const handleMaterialSelect = (internalUnit: any) => {
-  formData.value.constUnitId = internalUnit.id
-  formData.value.constUnitName = internalUnit.unitName
+const handleMaterialSelect = (materialList: any) => {
+  inventoryList.value = materialList.map((item) => ({
+    ...item,
+    materialId: item.id,
+    id: null
+  }))
 }
 
-// 清除材料单位选择
-const handleClearMaterial = () => {
-  formData.value.constUnitId = undefined
-  formData.value.constUnitName = ''
+const budgetTypeList = ref<BudgetType[]>([]) // 预算类型列表
+const getBudgetTypeListAll = async () => {
+  try {
+    budgetTypeList.value = await BudgetTypeApi.getBudgetTypeListAll({
+      budgetLevel: 1
+    })
+  } finally {
+  }
 }
 </script>
 <style scoped></style>

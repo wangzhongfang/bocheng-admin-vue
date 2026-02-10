@@ -62,6 +62,7 @@
 <script setup lang="ts">
 import { BudgetTypeApi, BudgetType } from '@/api/prj/budgettype'
 import { DICT_TYPE, getIntDictOptions } from '@/utils/dict'
+import CategoryTree from '../prjComponents/materialCategory/CategoryTree.vue'
 
 /** 项目-预算类型 表单 */
 defineOptions({ name: 'BudgetTypeForm' })
